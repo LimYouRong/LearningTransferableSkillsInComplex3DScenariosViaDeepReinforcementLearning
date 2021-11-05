@@ -155,7 +155,7 @@ public class JungleAgent : Agent
 
     public override void OnEpisodeBegin(){
         // ball.transform.localPosition = new Vector3(Random.Range(-0.1f,0.1f), 4.0f, Random.Range(-0.1f,0.1f));
-        level = Academy.Instance.EnvironmentParameters.GetWithDefault("Bounce", 1);
+        level = Academy.Instance.EnvironmentParameters.GetWithDefault("Bounce", 5);
         //level would be used to setup the environment in more complex environment
         ball.transform.localPosition = new Vector3(0, 6.0f, 0);
         ball.velocity = Vector3.zero;
@@ -215,7 +215,7 @@ public class JungleAgent : Agent
     public void Level2FixedUpdates(){//Agent will bounce ball towards goal
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         // float y = (ball.transform.localPosition[1]-12f/-10f);
-        if(xz_from_goal<15 && ball.transform.localPosition[1]<5f){
+        if(xz_from_goal<15 && ball.transform.localPosition[1]==5f){
             var score = -((-xz_from_goal+15)/(0-15));
             AddReward(score);
             EndEpisode();
@@ -223,8 +223,8 @@ public class JungleAgent : Agent
         OutOfBoundFixedUpdate();
     }
     public void Level3FixedUpdates(){//Agent will be able to catch the ball after bouncing it from goal
-        float xyz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if(xyz_from_goal<10 && ball.transform.localPosition[1]<5f){//Standing close to the goal
+        float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
+        if(xz_from_goal<15 && ball.transform.localPosition[1]==5f){//Standing close to the goal
             // score = -((-xy_from_goal+15)/(0-15));
             pending_reward = 1f;
             // AddReward(ScoredAGoal*0.5f);
@@ -264,7 +264,7 @@ public class JungleAgent : Agent
         float xyz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2)+ Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);        
         if(xyz_from_target<25){//score for closeby, bonus if it collided
             float score = -((-xyz_from_target+25)/(0-25));
-            pending_reward = score*0.5f;//Only give reward if it manage to catch the ball on the other side
+            pending_reward = (Mathf.Min(pending_reward, score*0.5f));//Only give reward if it manage to catch the ball on the other side
         }
         //     float y = (ball.transform.localPosition[1]-12f/-10f);
         //     // float normalizedValue = ((xy_from_ball -25)/(-25)) * y;
@@ -342,14 +342,6 @@ public class JungleAgent : Agent
                     SetReward(1);
                     EndEpisode();
                 }
-                // EndEpisode();
-                // if(touched==true && xy_from_ball<25){
-                    
-                //     if (GetCumulativeReward() >=10){
-                //         SetReward(10);
-                //         EndEpisode();
-                //     }
-                // }
             }else if(level==5 && touched==true){
                 float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
                 if (xy_from_goal<=10){
