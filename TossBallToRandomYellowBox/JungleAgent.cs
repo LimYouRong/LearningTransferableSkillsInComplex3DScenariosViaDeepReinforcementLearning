@@ -13,7 +13,7 @@ public class JungleAgent : Agent
     public TargetController targetController;
     Rigidbody player; //Can use this instead of declaring
     public float ballspeed = 1f;
-    float previousY = 2.0f;
+    float previousY = 2.0f;//Not used
     float current = 1;
     public float level;
     public float agentJumpHeight=0.1f;
@@ -215,19 +215,19 @@ public class JungleAgent : Agent
     public void Level2FixedUpdates(){//Agent will bounce ball towards goal
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         // float y = (ball.transform.localPosition[1]-12f/-10f);
-        if(xz_from_goal<15 && y<12f){
-            score = -((-xz_from_goal+15)/(0-15));
+        if(xz_from_goal<15 && ball.transform.localPosition[1]<5f){
+            var score = -((-xz_from_goal+15)/(0-15));
             AddReward(score);
             EndEpisode();
         }
         OutOfBoundFixedUpdate();
     }
-    public void Level3FixedUpdates(){//Agent will bounce ball as low as possible at goal
-        float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if(xy_from_goal<10){//Standing close to the goal
-            score = -((-xy_from_goal+15)/(0-15));
-            pending_reward = score*0.5f;
-            AddReward(ScoredAGoal*0.5f);
+    public void Level3FixedUpdates(){//Agent will be able to catch the ball after bouncing it from goal
+        float xyz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
+        if(xyz_from_goal<10 && ball.transform.localPosition[1]<5f){//Standing close to the goal
+            // score = -((-xy_from_goal+15)/(0-15));
+            pending_reward = 1f;
+            // AddReward(ScoredAGoal*0.5f);
             // float y = (ball.transform.localPosition[1]-12f/-10f);
             // float normalizedValue = ((xy_from_ball -25)/(-25)) * y;
             // reward +=normalizedValue;
@@ -237,8 +237,8 @@ public class JungleAgent : Agent
         if (ball.transform.localPosition[1]<= 0.6 || player.transform.localPosition[1]<0){
             if (pending_reward>0){//Distance from ball
                 float xz_from_player = Mathf.Pow(player.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(player.transform.localPosition[2] - ball.transform.localPosition[2],2);
-                if (xz_from_player<10){
-                    AddReward(-((-xz_from_player+10)/(0-10)) * 0.1f);
+                if (xz_from_player<15){
+                    AddReward((pending_reward) * -((-xz_from_player+15)/(0-15)) * 0.5f);
                 }
             }
             AddReward(-1f);
@@ -284,11 +284,11 @@ public class JungleAgent : Agent
 
     void FixedUpdate()
     {  
-        if(level==1){
+        if(level==1){//Touch ball
             Level1FixedUpdates();
-        }else if(level==2){
+        }else if(level==2){//Bounce ball towards goal
             Level2FixedUpdates();
-        }else if(level==3){
+        }else if(level==3){//Catching ball after bouncing towards goal
             Level3FixedUpdates();
         }else if(level==4){
             Level4FixedUpdates();
