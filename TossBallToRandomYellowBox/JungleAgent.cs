@@ -121,33 +121,60 @@ public class JungleAgent : Agent
         ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
         var goal_x = Random.Range(-5f,5);
         var goal_z = Random.Range(-5f,5);
-        goal.transform.localPosition = new Vector3(goal_x, -1.0f,goal_z);
-        target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+        goal.transform.localPosition = new Vector3(5f, -1.0f,5f);
+        target.transform.localPosition = new Vector3(0, -3.0f,0);
+
+        // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+        // target.transform.localPosition = new Vector3(goal_x, 8.0f,goal_z);
+        // goal.transform.localPosition = new Vector3(0, -1.0f,0);
+    }
+    public void setupBallLevel3(){//knock into goal x,z area
+        player.transform.localPosition = Vector3.up;
+        ball.transform.localPosition = new Vector3(0, 6.0f, 0);
+        ball.velocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
+        ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
+        goal.transform.localPosition = new Vector3(Random.Range(-8f,8), -1.0f,Random.Range(-8f,8));
+        // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+        target.transform.localPosition = new Vector3(0, -3.0f,0);
 
 
         // target.transform.localPosition = new Vector3(goal_x, 8.0f,goal_z);
 
         // goal.transform.localPosition = new Vector3(0, -1.0f,0);
     }
-    public void setupBallLevel3(){//knock into goal x,z area + y
+    public void setupBallLevel4(){//knock into goal x,z area + y
         player.transform.localPosition = Vector3.up;
         ball.transform.localPosition = new Vector3(0, 6.0f, 0);
         ball.velocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
         ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
-        var goal_x = Random.Range(-5f,5);
-        var goal_z = Random.Range(-5f,5);
-        goal.transform.localPosition = new Vector3(goal_x, -1.0f,goal_z);
-        target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+        goal.transform.localPosition = new Vector3(Random.Range(-8f,8), -1.0f,Random.Range(-8f,8));
+        target.transform.localPosition = new Vector3(0, -3.0f,0);
+        // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
 
         // target.transform.localPosition = new Vector3(goal_x, Random.Range(3f,10f),goal_z);
         // goal.transform.localPosition = new Vector3(Random.Range(-1f,1), -1.0f,Random.Range(-1f,1));
     }
-    public void setupBallLevel4(){//knock into target while standing on target
+    public void setupBallLevel5(){//knock into target while standing on target
         player.transform.localPosition = Vector3.up;
         ball.transform.localPosition = new Vector3(0, 6.0f, 0);
         ball.velocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
         ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
         goal.transform.localPosition = new Vector3(Random.Range(-5f,5), -1.0f,Random.Range(-5f,5));
+        target.transform.localPosition = new Vector3(0, -3.0f,0);
+
+        // target.transform.localPosition = new Vector3(2, 5.0f,2);
+        // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+
+        // goal.transform.localPosition = new Vector3(Random.Range(-1f,1), -1.0f,Random.Range(-1f,1));
+    }
+    public void setupBallLevel6(){//knock into target while standing on target
+        player.transform.localPosition = Vector3.up;
+        ball.transform.localPosition = new Vector3(0, 6.0f, 0);
+        ball.velocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
+        ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
+        goal.transform.localPosition = new Vector3(Random.Range(-5f,5), -1.0f,Random.Range(-5f,5));
+        // target.transform.localPosition = new Vector3(0, -3.0f,0);
+
         target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
 
         // goal.transform.localPosition = new Vector3(Random.Range(-1f,1), -1.0f,Random.Range(-1f,1));
@@ -181,10 +208,14 @@ public class JungleAgent : Agent
         }else if(level==4){
             setupBallLevel4();
         }else if(level==5){
-            setupBallLevel4();
+            setupBallLevel5();
+        }else if(level==6){
+            setupBallLevel6();
         //     setupGoalLevel2();
         // }else if(level==6){//not ready, max level now is 5
         //     setupGoalLevel3();
+        }else if(level==7){
+            setupBallLevel6();
         }
         current = 0;
     }
@@ -212,19 +243,53 @@ public class JungleAgent : Agent
             previousY = ball.transform.localPosition[1];
         }
     }
-    public void Level2FixedUpdates(){//Agent will bounce ball towards goal
+    public void Level2FixedUpdates(){//Agent will bounce ball towards fixed goal
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         // float y = (ball.transform.localPosition[1]-12f/-10f);
-        if(xz_from_goal<15 && ball.transform.localPosition[1]==5f){
-            var score = -((-xz_from_goal+15)/(0-15));
-            AddReward(score);
+        if(xz_from_goal<10 && ball.transform.localPosition[1]<5f){
+            // var score = -((-xz_from_goal+15)/(0-15));
+            AddReward(1f);
             EndEpisode();
+        }
+        if (ball.transform.localPosition[1]<= 0.6 || player.transform.localPosition[1]<0){
+            if(xz_from_goal<30f){
+                var score = -((-xz_from_goal+30)/(0-30));
+                AddReward(score*0.5f);
+            }else{
+                AddReward(-1f);
+            }
+            EndEpisode();
+        }
+        if (ball.transform.localPosition[1]> previousY){
+            previousY = ball.transform.localPosition[1];
         }
         OutOfBoundFixedUpdate();
     }
-    public void Level3FixedUpdates(){//Agent will be able to catch the ball after bouncing it from goal
+    public void Level3FixedUpdates(){//Agent will bounce ball towards random goal
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if(xz_from_goal<15 && ball.transform.localPosition[1]==5f){//Standing close to the goal
+        // float y = (ball.transform.localPosition[1]-12f/-10f);
+        if(xz_from_goal<10 && ball.transform.localPosition[1]<5f){
+            // var score = -((-xz_from_goal+15)/(0-15));
+            AddReward(1f);
+            EndEpisode();
+        }
+        if (ball.transform.localPosition[1]<= 0.6 || player.transform.localPosition[1]<0){
+            if(xz_from_goal<30f){
+                var score = -((-xz_from_goal+30)/(0-30));
+                AddReward(score*0.5f);
+            }else{
+                AddReward(-1f);
+            }
+            EndEpisode();
+        }
+        if (ball.transform.localPosition[1]> previousY){
+            previousY = ball.transform.localPosition[1];
+        }
+        OutOfBoundFixedUpdate();
+    }
+    public void Level4FixedUpdates(){//Agent will be able to catch the ball after bouncing it from goal
+        float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
+        if(xz_from_goal<10 && ball.transform.localPosition[1]<5f){//Standing close to the goal
             // score = -((-xy_from_goal+15)/(0-15));
             pending_reward = 1f;
             // AddReward(ScoredAGoal*0.5f);
@@ -249,7 +314,7 @@ public class JungleAgent : Agent
         }
     }
 
-    public void Level4FixedUpdates(){//Agent will bounce ball to goal, goal relocate, bounce again.
+    public void Level5FixedUpdates(){//Agent will bounce ball to goal, goal relocate, bounce again.
         // float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         // if(xy_from_goal<10){
         //     float y = (ball.transform.localPosition[1]-12f/-10f);
@@ -260,7 +325,7 @@ public class JungleAgent : Agent
         // }
         OutOfBoundFixedUpdate();
     }
-    public void Level5FixedUpdates(){//Bounce to multiple goal then make one shot only
+    public void Level6FixedUpdates(){//Bounce to multiple goal then make one shot only
         float xyz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2)+ Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);        
         if(xyz_from_target<25){//score for closeby, bonus if it collided
             float score = -((-xyz_from_target+25)/(0-25));
@@ -276,7 +341,7 @@ public class JungleAgent : Agent
         OutOfBoundFixedUpdate();
     }
     public void ScoredAGoal(){
-        if (level>=5){
+        if (level>=6){
             AddReward(0.5f);
             target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
         }
@@ -295,7 +360,9 @@ public class JungleAgent : Agent
         }else if(level==5){//Single shot
             Level5FixedUpdates();
         }else if(level==6){//Score as much as it can, target will move if hit
-            Level5FixedUpdates();
+            Level6FixedUpdates();
+        }else if(level==7){
+            Level6FixedUpdates();
         }
         // if (level==1){
         //     OutOfBoundFixedUpdate();
@@ -327,33 +394,29 @@ public class JungleAgent : Agent
                     AddReward(pending_reward);
                     EndEpisode();
                 }
-            }else if(level==4 && touched==true){
+            }else if(level==5 && touched==true){
                 float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
                 if (xy_from_goal<=10){
                     float normalised_reward = -((-xy_from_goal+10)/(0-10));
                     AddReward(normalised_reward/5);//5 times
                     goal.transform.localPosition = new Vector3(Random.Range(-8f,8), -1.0f,Random.Range(-8f,8));
                 } 
-                // print("did it work?");
-                // float xy_from_ball = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
-                // AddReward(xy_from_ball);
-                // print(xy_from_ball+"??");
                 if (GetCumulativeReward() >=1){//1 means perfected the ability
                     SetReward(1);
                     EndEpisode();
                 }
-            }else if(level==5 && touched==true){
+            }else if(level==6 && touched==true){//Make a shot
                 float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
                 if (xy_from_goal<=10){
                     shot=true;
                 }else{
                     shot=false;
                 }
-                if (pending_reward>= 0.1 || GetCumulativeReward() >=0.1){//if it make a shot, end epsoide
+                if (pending_reward>= 0.1 || GetCumulativeReward() >=0.1){//if it make a shot and catches the ball after, end epsoide
                     AddReward(pending_reward);
                     EndEpisode();
                 }
-            }else if(level==6 && touched==true){
+            }else if(level==7 && touched==true){
                 float xy_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
                 if (xy_from_goal<=10){
                     shot=true;
