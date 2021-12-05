@@ -20,6 +20,10 @@ public class JungleAgent : Agent
     public float pending_reward;//float GetCumulativeReward() default method
     public bool shot;
     public bool touched; 
+
+    public float close_reward=0;
+
+    public bool touched_on_goal;
     public override void Initialize()
     {
         player = this.GetComponent<Rigidbody>();
@@ -184,7 +188,7 @@ public class JungleAgent : Agent
 
     public override void OnEpisodeBegin(){
         // ball.transform.localPosition = new Vector3(Random.Range(-0.1f,0.1f), 4.0f, Random.Range(-0.1f,0.1f));
-        level = Academy.Instance.EnvironmentParameters.GetWithDefault("Bounce", 5);
+        level = Academy.Instance.EnvironmentParameters.GetWithDefault("Bounce", 6);
         //level would be used to setup the environment in more complex environment
         ball.transform.localPosition = new Vector3(0, 6.0f, 0);
         ball.velocity = Vector3.zero;
@@ -198,6 +202,7 @@ public class JungleAgent : Agent
 
         touched = false;
         shot = false;
+        touched_on_goal = false;
         pending_reward = 0f;
         setupBallLevel1();
         // if (level==0){
@@ -232,50 +237,42 @@ public class JungleAgent : Agent
             previousY = ball.transform.localPosition[1];
         }
     }
+    //Level1: Bounce ball towards goal
     public void Level1FixedUpdates(){//Goal focused training
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        if (touched && xz_from_goal<15){
-            SetReward(1f);
+        if (GetCumulativeReward()>=1){
+            SetReward(1);
             EndEpisode();
         }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
-            // AddReward(-1f);
+            AddReward(-1f);
             if (xz_from_goal<=40){
                 AddReward(-((-xz_from_goal+40)/(0-40))*0.2f);
             }
-            if (GetCumulativeReward()>1){
-                SetReward(0.9f);
+            if (GetCumulativeReward()>=1){
+                SetReward(1f);
             }
                 // print(GetCumulativeReward());
             EndEpisode();
         }
     }
+    //Bounce ball towards goal then the other goal
     public void Level2FixedUpdates(){
         float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        if (touched && xz_from_target<15 && xz_from_goal<15){
-            AddReward(0.5f);
-            spawnGoalTarget();
-        }
+
         if (GetCumulativeReward()>=1){
+            SetReward(1f);
             EndEpisode();
         }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
                 if (previousY<=40){
-                    AddReward(-((-xz_from_target+40)/(0-40))*0.2f);
+                    AddReward(((40-previousY)/(40))*0.2f);
                 }
                 AddReward(-1f);
-                // print(GetCumulativeReward());
                 EndEpisode();
         }
-        if (xz_from_target< previousY){
+        if (xz_from_target< previousY && touched_on_goal){
             previousY = xz_from_target;
         }
     }
@@ -283,157 +280,117 @@ public class JungleAgent : Agent
         float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        if (touched && xz_from_target<10 &&xz_from_goal<15){
-            AddReward(0.5f);
-            spawnGoalTarget();
-            // EndEpisode();
-        }
         if (GetCumulativeReward()>=1){
+            SetReward(1f);
             EndEpisode();
         }
-        // if (GetCumulativeReward()>=1){
-        //     SetReward(1);
-        //     EndEpisode();
-        // }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
                 if (previousY<=40){
-                    AddReward(-((-xz_from_target+40)/(0-40))*0.2f);
+                    AddReward(((40-previousY)/(40))*0.2f);
                 }
                 AddReward(-1f);
                 // print(GetCumulativeReward());
                 EndEpisode();
         }
-        if (xz_from_target< previousY){
+        if (xz_from_target< previousY && touched_on_goal){
             previousY = xz_from_target;
         }
     }
+    //Ball touch object on goal
         public void Level4FixedUpdates(){
         float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
         
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        if (touched && xz_from_target<5 && xz_from_goal<15){
-            AddReward(1f);
-            EndEpisode();
-        }
-        if (GetCumulativeReward()>0){
+        if (GetCumulativeReward()>=1){
             SetReward(1);
             EndEpisode();
         }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
                 if (previousY<=40){
-                    AddReward(-((-previousY+40)/(0-40))*0.2f);
+                    AddReward(((40-previousY)/(40))*0.2f);
                 }
                 AddReward(-1f);
-                // print(GetCumulativeReward());
                 EndEpisode();
         }
-        if (xz_from_target< previousY){
+        if (xz_from_target< previousY && touched_on_goal){
             previousY = xz_from_target;
         }
     }
         public void Level5FixedUpdates(){
         float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if (touched && xz_from_target<3){
-            AddReward(1f);
-            EndEpisode();
-        }
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        // if (touched && xz_from_target<15){
-        //     AddReward(1f);
-        //     EndEpisode();
-        // }
-        if (GetCumulativeReward()>0){
+
+        if (GetCumulativeReward()>=1){
             SetReward(1);
             EndEpisode();
         }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
                 if (previousY<=40){
-                    AddReward(-((-previousY+40)/(0-40))*0.2f);
+                    AddReward(((40-previousY)/(40))*0.2f);
                 }
                 AddReward(-1f);
                 // print(GetCumulativeReward());
                 EndEpisode();
         }
-        if (xz_from_target< previousY && xz_from_goal<15){
+        if (xz_from_target< previousY && touched_on_goal){
             previousY = xz_from_target;
         }
     }
     public void Level6FixedUpdates(){
         float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
         float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if (touched && xz_from_target<1){
-            AddReward(1f);
-            EndEpisode();
-        }
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        // if (touched && xz_from_target<15){
-        //     AddReward(0.5f);
-        //     previousY = 0;
-        //     spawnGoalTarget();
-        // }
-        if (GetCumulativeReward()>0){
-            AddReward(1f);
+        if (GetCumulativeReward()>=1){
+            SetReward(1f);
             EndEpisode();
         }
         if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
                 if (previousY<=40){
-                    AddReward(-((-xz_from_target+40)/(0-40))*0.2f);
+                    AddReward(((40-previousY)/(40))*0.2f);
                 }
                 AddReward(-1f);
                 // print(GetCumulativeReward());
                 EndEpisode();
         }
-        if (xz_from_target< previousY && xz_from_goal<15){
+        if (xz_from_target< previousY && touched_on_goal){
             previousY = xz_from_target;
         }
     }
-    public void Level7FixedUpdates(){
-        float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        // if (touched && xz_from_target<1){
-        //     AddReward(1f);
-        //     EndEpisode();
-        // }
-        // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
-        //     AddReward(0.0000001f);
-        // }
-        // if (touched && xz_from_target<15){
-        //     AddReward(0.5f);
-        //     previousY = 0;
-        //     spawnGoalTarget();
-        // }
-        if (GetCumulativeReward()>=1){
-            AddReward(1f);
-            EndEpisode();
-        }
-        if (GetCumulativeReward()>0){
-            AddReward(0.0000001f);
-            EndEpisode();
-        }
+    // public void Level7FixedUpdates(){
+    //     float xz_from_target = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[1] - ball.transform.localPosition[1],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
+    //     float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
+    //     // if (touched && xz_from_target<1){
+    //     //     AddReward(1f);
+    //     //     EndEpisode();
+    //     // }
+    //     // if (touched && ball.transform.localPosition[0]>=-5f && ball.transform.localPosition[0]<=5f && ball.transform.localPosition[1]>=0.6f && ball.transform.localPosition[2]>=-5f && ball.transform.localPosition[2]<=5f){
+    //     //     AddReward(0.0000001f);
+    //     // }
+    //     // if (touched && xz_from_target<15){
+    //     //     AddReward(0.5f);
+    //     //     previousY = 0;
+    //     //     spawnGoalTarget();
+    //     // }
+    //     if (GetCumulativeReward()>=1){
+    //         AddReward(1f);
+    //         EndEpisode();
+    //     }
+    //     if (GetCumulativeReward()>0){
+    //         AddReward(0.0000001f);
+    //         EndEpisode();
+    //     }
 
-        if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
-                // if (previousY<=40){
-                //     AddReward(-((-xz_from_target+40)/(0-40))*0.2f);
-                // }
-                AddReward(-1f);
-                // print(GetCumulativeReward());
-                EndEpisode();
-        }
-        if (xz_from_target< previousY && xz_from_goal<15){
-            previousY = xz_from_target;
-        }
-    }
+    //     if (ball.transform.localPosition[1]<=0.6 || player.transform.localPosition[1]<0){
+    //             // if (previousY<=40){
+    //             //     AddReward(-((-xz_from_target+40)/(0-40))*0.2f);
+    //             // }
+    //             AddReward(-1f);
+    //             // print(GetCumulativeReward());
+    //             EndEpisode();
+    //     }
+    //     if (xz_from_target< previousY && xz_from_goal<15){
+    //         previousY = xz_from_target;
+    //     }
+    // }
     // public void Level1FixedUpdates(){
     //     float xz_from_player = Mathf.Pow(player.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(player.transform.localPosition[2] - ball.transform.localPosition[2],2);
     //     float xyz_target_from_ball = Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2)+ Mathf.Pow(target.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(target.transform.localPosition[2] - ball.transform.localPosition[2],2);
@@ -630,11 +587,10 @@ public class JungleAgent : Agent
     //     OutOfBoundFixedUpdate();
     // }
     public void ScoredAGoal(){
-        float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
-        if (level>=2 && xz_from_goal<15){
-            AddReward(0.4f);
+        if (touched_on_goal){
+            AddReward(0.5f);
             spawnGoalTarget();
-            previousY = 0;
+            previousY = 41;
             // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
         }
     }
@@ -651,11 +607,14 @@ public class JungleAgent : Agent
             Level4FixedUpdates();
         }else if(level==5){//Single shot
             Level5FixedUpdates();
-        }else if(level==6){//Score as much as it can, target will move if hit
+        }else{
             Level6FixedUpdates();
-        }else if(level==7){
-            Level7FixedUpdates();
         }
+        // }else if(level==6){//Score as much as it can, target will move if hit
+        //     Level6FixedUpdates();
+        // }else if(level==7){
+        //     Level7FixedUpdates();
+        // }
         // if (level==1){
         //     OutOfBoundFixedUpdate();
         //     // Level0FixedUpdates();
@@ -674,9 +633,50 @@ public class JungleAgent : Agent
             var dir = collision.contacts[0].point - transform.position;
             dir = dir.normalized;
             collision.gameObject.GetComponent<Rigidbody>().AddForce((dir * 0.1f));
-            //^ might not be working
             current+=1;
-            previousY =0;
+            if (level==1){
+                if (touched_on_goal){
+                    AddReward(0.3f);
+                    spawnGoalTarget();
+                }
+            }
+            else if (level== 2){
+                if (touched_on_goal && previousY<20){
+                    AddReward(0.1f);
+                    AddReward(((20-previousY)/20)*0.3f);
+                    spawnGoalTarget();
+                }
+            }else if(level==3){
+                if (touched_on_goal && previousY<10){
+                    AddReward(0.1f);
+                    AddReward(((10-previousY)/10)*0.3f);
+                    spawnGoalTarget();
+                }
+            }
+            }else if(level==4){
+                if (touched_on_goal && previousY<5){
+                    AddReward(0.1f);
+                    AddReward(((5-previousY)/5)*0.3f);
+                    spawnGoalTarget();
+                }
+            }else if(level==5){
+                if (touched_on_goal && previousY<3){
+                    AddReward(0.1f);
+                    AddReward(((3-previousY)/3)*0.3f);
+                    spawnGoalTarget();
+                }
+            }
+
+            previousY =41;
+            
+            float xz_from_goal = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
+            if (xz_from_goal<15){
+                touched_on_goal = true;
+            }else{
+                touched_on_goal = false;
+            }
+            touched = true;
+
 
             // if (level== 1){
             //     // AddReward(0.2f);
@@ -726,7 +726,7 @@ public class JungleAgent : Agent
             //         shot=false;
             //     }
             // }
-            touched = true;
+            
             // else if(level==2 || level==3){//Bounce on player and goal
             //     float xy_from_ball = Mathf.Pow(goal.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(goal.transform.localPosition[2] - ball.transform.localPosition[2],2);
             //     if (xy_from_ball<25){
@@ -764,7 +764,6 @@ public class JungleAgent : Agent
             //     print(reward);
             //     EndEpisode();
             // }
-        }
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
