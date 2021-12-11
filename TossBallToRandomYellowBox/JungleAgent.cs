@@ -271,15 +271,17 @@ public class JungleAgent : Agent
             if (shot){
                 float xz_from_player = Mathf.Pow(player.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(player.transform.localPosition[2] - ball.transform.localPosition[2],2);
                 if (xz_from_player<20){
-                    AddReward(-((-xz_from_player+20)/(0-20))*0.3f);
+                    AddReward(-((-xz_from_player+20)/(0-20))*0.2f);
                 }
             }else if(touched_on_goal){
                 if (previousY<=20){
-                    AddReward(((20-previousY)/(20))*0.3f);
+                    AddReward(((20-previousY)/(20))*0.2f);
                 }
             }else{
-                if (xz_from_goal<=40){
-                    AddReward(-((-xz_from_goal+40)/(0-40))*0.3f);
+                if (previousY<=20){
+                    AddReward(((20-previousY)/(20))*0.2f);
+                }else if(xz_from_goal<=40){
+                    AddReward(-((-xz_from_goal+40)/(0-40))*0.1f);
                 }
             }
             EndEpisode();
@@ -674,16 +676,21 @@ public class JungleAgent : Agent
 
             current+=1;
             if (level==1){
-                if (cur_state==false && touched_on_goal==true && ball.transform.localPosition[1] >1f){
-                    AddReward(0.3f);
-                }else if(cur_state==true && touched_on_goal==false){
-                    AddReward(-0.3f);
-                }
-                if (shot && ball.transform.localPosition[1] >1f){
-                    AddReward(0.3f);
+                if (shot){
+                    if(ball.transform.localPosition[1]>1f){
+                        if (touched_on_goal){
+                            AddReward(0.3f);
+                        }
+                        AddReward(0.3f);
+                    }
+                }else{
+                    if (cur_state==false && touched_on_goal==true && ball.transform.localPosition[1] >1f){
+                        AddReward(0.3f);
+                    }else if(cur_state==true && touched_on_goal==false){
+                        AddReward(-0.3f);
+                    }
                 }
                 AddReward(-0.1f);
-
             }
             // else if (level== 2){
             //     if (shot){
