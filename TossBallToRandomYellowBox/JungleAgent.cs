@@ -273,15 +273,11 @@ public class JungleAgent : Agent
                 if (xz_from_player<20){
                     AddReward(-((-xz_from_player+20)/(0-20))*0.2f);
                 }
-            }else if(touched_on_goal){
-                if (previousY<=20){
-                    AddReward(((20-previousY)/(20))*0.2f);
-                }
+            }else if(previousY<=10){
+                AddReward(((10-previousY)/(10))*0.2f);
             }else{
-                if (previousY<=20){
-                    AddReward(((20-previousY)/(20))*0.2f);
-                }else if(xz_from_goal<=40){
-                    AddReward(-((-xz_from_goal+40)/(0-40))*0.1f);
+                if(xz_from_goal<=40){
+                    AddReward(-((-xz_from_goal+40)/(0-40))*0.2f);
                 }
             }
             EndEpisode();
@@ -692,6 +688,8 @@ public class JungleAgent : Agent
                 }
                 AddReward(-0.1f);
             }
+            shot = false;
+
             // else if (level== 2){
             //     if (shot){
             //         AddReward(0.2f);
