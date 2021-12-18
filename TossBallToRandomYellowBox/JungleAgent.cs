@@ -26,6 +26,8 @@ public class JungleAgent : Agent
     public float close_reward=0;
 
     public bool touched_on_goal;
+
+    public float minimum_height;
     public override void Initialize()
     {
         player = this.GetComponent<Rigidbody>();
@@ -41,8 +43,6 @@ public class JungleAgent : Agent
         Vector3 normalizedBallRotation = rotation.eulerAngles / 360.0f;  // [0,1]
         this.AddVecObs(sensor, normalizedBallRotation);
         this.AddVecObs(sensor, ball.angularVelocity);
-        //Possiblily normalize localPosition to be [0,1]
-        //VectorSensor.AddObservation(transform.position.x / maxValue);
         this.AddVecObs(sensor, player.transform.localPosition);
         Vector3 playerbound = new Vector3(5f,100f,5f);
         this.AddVecObs(sensor, player.velocity);
@@ -51,10 +51,6 @@ public class JungleAgent : Agent
         Vector3 normalizedPlayerRotation = rotation.eulerAngles / 360.0f;  // [0,1]
         this.AddVecObs(sensor, normalizedPlayerRotation);
         this.AddVecObs(sensor, player.angularVelocity);
-        
-        // var xy_from_ball = Mathf.Pow(ball.transform.localPosition[0] - player.transform.localPosition[0],2) + Mathf.Pow(ball.transform.localPosition[2] - player.transform.localPosition[2],2);
-        // sensor.AddObservation(xy_from_ball);
-
         this.AddVecObs(sensor,goal.transform.localPosition);
         this.AddVecObs(sensor,target.transform.localPosition);
 
@@ -109,8 +105,8 @@ public class JungleAgent : Agent
     void spawnGoalTarget(){
         float goal_x = Random.Range(-2f,2);
         float goal_z = Random.Range(-2f,2);
-        goal.transform.localPosition = new Vector3(goal_x ,-1.0f,goal_z);
-        target.transform.localPosition = new Vector3(Random.Range(-1f,1) + goal_x, Random.Range(1f,2f),Random.Range(-1f,1)+ goal_z);
+        goal.transform.localPosition = new Vector3(goal_x ,0f,goal_z);
+        target.transform.localPosition = new Vector3(Random.Range(-1f,1) + goal_x, Random.Range(2f,3f),Random.Range(-1f,1)+ goal_z);
     }
     void spawnGoalTargetReverse(){
         float goal_x = Random.Range(-2f,2);
@@ -118,19 +114,20 @@ public class JungleAgent : Agent
         float player_x = Random.Range(-1f,1) + goal_x;
         float player_z = Random.Range(-1f,1) + goal_z;
 
-        ball.transform.localPosition = new Vector3(player_x, 4.0f, player_z);
+        ball.transform.localPosition = new Vector3(player_x, 3.0f, player_z);
         ball.velocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
         ball.angularVelocity = new Vector3(Random.Range(-1f,1),Random.Range(-1f,1),Random.Range(-1f,1));
 
-        goal.transform.localPosition = new Vector3(goal_x ,-1.0f,goal_z);
+        goal.transform.localPosition = new Vector3(goal_x ,0f,goal_z);
         target.transform.localPosition = new Vector3(Random.Range(-1f,1) + goal_x, Random.Range(1f,2f),Random.Range(-1f,1)+ goal_z);
         player.transform.localPosition = new Vector3(player_x, 0.1f, player_z);
     }
     public void setupBallLevel0(){//FOR TESTING ONLY
         player.transform.localPosition = Vector3.up;
-        ball.transform.localPosition = new Vector3(0, 4.0f, 0);
+        ball.transform.localPosition = new Vector3(0, 3.0f, 0);
         goal.transform.localPosition = new Vector3(0, -1.0f,0);
-        target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
+        spawnGoalTarget();
+        // target.transform.localPosition = new Vector3(Random.Range(-5f,5), Random.Range(3f,10f),Random.Range(-5f,5));
     }
     // public void setupBallLevel1(){//catching
     //     player.transform.localPosition = new Vector3(Random.Range(-1f,1), 0.1f, Random.Range(-1f,1));
@@ -223,6 +220,9 @@ public class JungleAgent : Agent
         shot = false;
         touched_on_goal = false;
         pending_reward = 0f;
+        score_no = 0;
+        no_bounce = 0;
+        minimum_height = (2 * player.transform.lossyScale.y) * 0.8f;
         if (level==0){
             setupBallLevel0();
         }
@@ -271,14 +271,14 @@ public class JungleAgent : Agent
             // AddReward(-1f);
             if (shot){
                 float xz_from_player = Mathf.Pow(player.transform.localPosition[0] - ball.transform.localPosition[0],2) + Mathf.Pow(player.transform.localPosition[2] - ball.transform.localPosition[2],2);
-                if (xz_from_player<20){
-                    AddReward(-((-xz_from_player+20)/(0-20))*0.2f);
+                if (xz_from_player<=80){
+                    AddReward(-((-xz_from_player+80)/(0-80))*0.2f);
                 }
-            }else if(previousY<=10){
-                AddReward(((10-previousY)/(10))*0.2f);
+            }else if(previousY<=50){
+                AddReward(((50-previousY)/(50))*0.2f);
             }else{
-                if(xz_from_goal<=40){
-                    AddReward(-((-xz_from_goal+40)/(0-40))*0.2f);
+                if(xz_from_goal<=80){
+                    AddReward(-((-xz_from_goal+80)/(0-80))*0.2f);
                 }
             }
             // print(GetCumulativeReward());
@@ -626,6 +626,7 @@ public class JungleAgent : Agent
             shot = true;
             score_no+=1;
             if (score_no==2){
+                // print("PERFECT RUN");
                 AddReward(no_bounce*0.05f);
                 EndEpisode();
             }
@@ -680,14 +681,14 @@ public class JungleAgent : Agent
             current+=1;
             if (level==1){
                 if (shot){
-                    if(ball.transform.localPosition[1]>1f){
+                    if(ball.transform.localPosition[1]>minimum_height){
                         if (touched_on_goal){
                             AddReward(0.3f);
                         }
                         AddReward(0.3f);
                     }
                 }else{
-                    if (cur_state==false && touched_on_goal==true && ball.transform.localPosition[1] >1f){
+                    if (cur_state==false && touched_on_goal==true && ball.transform.localPosition[1] >minimum_height){
                         AddReward(0.3f);
                     }else if(cur_state==true && touched_on_goal==false){
                         AddReward(-0.3f);
